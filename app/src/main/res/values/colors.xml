@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="youtube_red">#FF0000</color>
+    <color name="youtube_dark">#0F0F0F</color>
+    <color name="youtube_dark_card">#272727</color>
+    <color name="youtube_dark_surface">#181818</color>
+    <color name="youtube_text_primary">#FFFFFF</color>
+    <color name="youtube_text_secondary">#AAAAAA</color>
+    <color name="youtube_divider">#333333</color>
+    <color name="youtube_chip_selected">#FFFFFF</color>
+    <color name="youtube_chip_bg">#272727</color>
+    <color name="youtube_chip_text">#AAAAAA</color>
+    <color name="white">#FFFFFF</color>
+    <color name="black">#000000</color>
+    <color name="google_blue">#4285F4</color>
+    <color name="google_green">#34A853</color>
+    <color name="google_yellow">#FBBC05</color>
+    <color name="google_red">#EA4335</color>
+</resources>

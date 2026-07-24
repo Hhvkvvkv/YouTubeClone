@@ -1,0 +1,23 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="100dp"
+    android:height="30dp"
+    android:viewportWidth="200"
+    android:viewportHeight="60">
+    <!-- Play Button -->
+    <path
+        android:fillColor="#FF0000"
+        android:pathData="M20,10 L80,30 L20,50 Z" />
+    <!-- YouTube Text -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M90,15 L105,15 L105,45 L90,45 Z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M115,15 L130,15 L130,45 L115,45 Z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M140,15 L155,15 L155,45 L140,45 Z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M165,15 L180,15 L180,45 L165,45 Z" />
+</vector>

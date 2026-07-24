@@ -1,0 +1,66 @@
+name: Build YouTube Clone APK
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+
+    - name: Setup Android SDK
+      uses: android-actions/setup-android@v3
+
+    - name: Setup Gradle
+      uses: gradle/actions/setup-gradle@v3
+
+    - name: Grant execute permission for gradlew
+      run: chmod +x gradlew
+
+    - name: Build Release APK
+      run: ./gradlew assembleRelease --no-daemon
+
+    - name: Upload APK Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: YouTubeClone-release
+        path: app/build/outputs/apk/release/*.apk
+        retention-days: 90
+
+    - name: Create Release
+      uses: softprops/action-gh-release@v2
+      if: startsWith(github.ref, 'refs/tags/')
+      with:
+        files: app/build/outputs/apk/release/*.apk
+        tag_name: v${{ github.run_number }}
+        name: YouTube Clone v${{ github.run_number }}
+        generate_release_notes: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Download APK Artifact
+      if: success()
+      uses: actions/download-artifact@v4
+      with:
+        name: YouTubeClone-release
+        path: ./apk-output
+
+    - name: Print APK Location
+      run: |
+        echo "==========================================="
+        echo "  APK Built Successfully!"
+        echo "  Download from: Actions > Artifacts"
+        echo "  Or check: ./apk-output/"
+        echo "==========================================="
+        ls -la ./apk-output/
