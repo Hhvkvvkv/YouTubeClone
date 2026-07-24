@@ -1,6 +1,7 @@
 package com.ytclone.api
 
 import com.google.gson.Gson
+import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
 import com.ytclone.models.VideoItem
@@ -46,7 +47,7 @@ object YouTubeApi {
         }
     }
 
-    private fun getContext(oauthToken: String? = null): JsonObject {
+    private fun getContext(): JsonObject {
         val clientObj = JsonObject().apply {
             addProperty("clientName", "WEB")
             addProperty("clientVersion", "2.20260715.04.00")
@@ -56,7 +57,8 @@ object YouTubeApi {
                 addProperty("visitorData", visitorData)
             }
         }
-        val context = JsonObject().add("client", clientObj)
+        val context = JsonObject()
+        context.add("client", clientObj)
         return context
     }
 
@@ -120,8 +122,7 @@ object YouTubeApi {
                     addProperty("browseId", "FEtrending")
                 }
             }
-            val endpoint = if (categoryParams != null) "browse" else "browse"
-            val request = buildRequest(endpoint, body, oauthToken).build()
+            val request = buildRequest("browse", body, oauthToken).build()
             val response = client.newCall(request).execute()
             val json = JsonParser.parseString(response.body?.string()).asJsonObject
 
@@ -144,7 +145,6 @@ object YouTubeApi {
                 val tabRenderer = tab.asJsonObject?.getAsJsonObject("tabRenderer") ?: continue
                 val tabContent = tabRenderer.getAsJsonObject("content") ?: continue
 
-                // richGridRenderer
                 val richGrid = tabContent.getAsJsonObject("richGridRenderer")
                 if (richGrid != null) {
                     val richItems = richGrid.getAsJsonArray("contents") ?: return
@@ -160,7 +160,6 @@ object YouTubeApi {
                     }
                 }
 
-                // sectionListRenderer
                 val sectionList = tabContent.getAsJsonObject("sectionListRenderer")
                 if (sectionList != null) {
                     val sections = sectionList.getAsJsonArray("contents") ?: return
