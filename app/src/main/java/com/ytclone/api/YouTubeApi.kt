@@ -189,8 +189,8 @@ object YouTubeApi {
         val shelfRenderer = item.getAsJsonObject("shelfRenderer")
         if (shelfRenderer != null) {
             val content = shelfRenderer.getAsJsonObject("content")
-            val items = content?.getAsJsonArray("expandedShelfContentsRenderer")
-                ?.getAsJsonArray("items")
+            val expandedShelf = content?.getAsJsonObject("expandedShelfContentsRenderer")
+            val items = expandedShelf?.getAsJsonArray("items")
             items?.forEach { parseItemForVideos(it.asJsonObject, results) }
         }
         val horizontalListRenderer = item.getAsJsonObject("horizontalListRenderer")
