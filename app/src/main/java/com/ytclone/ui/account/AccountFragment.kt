@@ -116,4 +116,8 @@ class AccountFragment : Fragment() {
             Toast.makeText(requireContext(), item.title, Toast.LENGTH_SHORT).show()
         }
     }
+
+    companion object {
+        fun newInstance() = AccountFragment()
+    }
 }

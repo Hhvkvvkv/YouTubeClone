@@ -19,8 +19,7 @@
             android:layout_height="40dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:src="@drawable/ic_back"
-            android:contentDescription="إغلاق"
-            android:onClick="finish" />
+            android:contentDescription="إغلاق" />
 
         <TextView
             android:layout_width="0dp"
