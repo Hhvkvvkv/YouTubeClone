@@ -17,7 +17,6 @@ import com.bumptech.glide.Glide
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
-import com.google.android.gms.common.SignInButton
 import com.google.android.gms.common.api.ApiException
 import com.google.android.material.button.MaterialButton
 import com.ytclone.R
@@ -57,8 +56,6 @@ class AccountFragment : Fragment() {
 
         val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
             .requestEmail()
-            .requestIdToken(getString(R.string.google_api_key))
-            .requestServerAuthCode(getString(R.string.google_api_key))
             .build()
 
         googleSignInClient = GoogleSignIn.getClient(requireActivity(), gso)
@@ -95,15 +92,10 @@ class AccountFragment : Fragment() {
     private fun showProfileSection(name: String, email: String, photoUrl: String?) {
         loginSection.visibility = View.GONE
         profileSection.visibility = View.VISIBLE
-
         txtUserName.text = name
         txtUserEmail.text = email
-
         if (!photoUrl.isNullOrEmpty()) {
-            Glide.with(this)
-                .load(photoUrl)
-                .circleCrop()
-                .into(imgProfile)
+            Glide.with(this).load(photoUrl).circleCrop().into(imgProfile)
         }
     }
 
@@ -114,7 +106,6 @@ class AccountFragment : Fragment() {
             MenuItem(R.drawable.ic_subscriptions, "قوائم التشغيل", "playlists"),
             MenuItem(R.drawable.ic_play, "الفيديوهات المفضلة", "liked"),
         )
-
         recyclerMenu.layoutManager = LinearLayoutManager(requireContext())
         recyclerMenu.adapter = MenuAdapter(menuItems) { item ->
             Toast.makeText(requireContext(), item.title, Toast.LENGTH_SHORT).show()
@@ -128,7 +119,7 @@ class AccountFragment : Fragment() {
             try {
                 val account = task.getResult(ApiException::class.java)
                 showProfileSection(account.displayName ?: "مستخدم", account.email ?: "", account.photoUrl?.toString())
-                Toast.makeText(requireContext(), "تم تسجيل الدخول بنجاح: ${account.email}", Toast.LENGTH_LONG).show()
+                Toast.makeText(requireContext(), "تم تسجيل الدخول: ${account.email}", Toast.LENGTH_LONG).show()
             } catch (e: ApiException) {
                 Toast.makeText(requireContext(), "فشل تسجيل الدخول: ${e.statusCode}", Toast.LENGTH_SHORT).show()
             }
