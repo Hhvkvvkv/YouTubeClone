@@ -105,7 +105,7 @@ object YouTubeApi {
             "live" -> "live stream music"
             "gaming" -> "gaming highlights"
             "news" -> "news today"
-            "sports" => "sports highlights"
+            "sports" -> "sports highlights"
             "learning" -> "education tutorial"
             "fashion" -> "fashion beauty"
             else -> "trending videos"
