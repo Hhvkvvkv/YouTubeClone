@@ -22,6 +22,7 @@ import com.ytclone.models.MenuItem
 import com.ytclone.ui.history.HistoryActivity
 import com.ytclone.ui.login.LoginActivity
 import com.ytclone.utils.CookieStorage
+import android.webkit.CookieManager
 
 class AccountFragment : Fragment() {
 
@@ -83,13 +84,22 @@ class AccountFragment : Fragment() {
 
     private fun performLogout() {
         // حذف الكوكيز من SharedPreferences
-        prefs.edit().remove("youtube_cookies").putBoolean("is_logged_in", false).apply()
+        prefs.edit()
+            .remove("youtube_cookies")
+            .putBoolean("is_logged_in", false)
+            .apply()
         
         // حذف الكوكيز من التخزين الخارجي
         CookieStorage.clearCookies(requireContext())
         
         // مسح الكوكيز من YouTubeApi
         YouTubeApi.authCookies = ""
+        
+        // مسح كوكيز WebView أيضاً
+        try {
+            CookieManager.getInstance().removeAllCookies(null)
+            CookieManager.getInstance().flush()
+        } catch (e: Exception) { }
         
         // عرض شاشة تسجيل الدخول
         showLoginSection()
@@ -98,11 +108,24 @@ class AccountFragment : Fragment() {
     }
 
     private fun checkLoginStatus() {
+        // أولاً: تحقق من الكوكيز المحفوظة في التخزين الخارجي
+        val externalCookies = CookieStorage.loadCookies(requireContext())
+        if (!externalCookies.isNullOrEmpty()) {
+            YouTubeApi.authCookies = externalCookies
+            // حافظ عليها في SharedPreferences أيضاً
+            prefs.edit().putString("youtube_cookies", externalCookies).apply()
+            showProfileSection("مستخدم YouTube", "تم تسجيل الدخول ✓", null)
+            return
+        }
+
+        // ثانياً: تحقق من SharedPreferences
         val cookies = prefs.getString("youtube_cookies", "") ?: ""
         val isLoggedIn = prefs.getBoolean("is_logged_in", false)
 
         if (cookies.isNotEmpty() && isLoggedIn) {
             YouTubeApi.authCookies = cookies
+            // حافظ في التخزين الخارجي أيضاً
+            CookieStorage.saveCookies(requireContext(), cookies)
             showProfileSection("مستخدم YouTube", "تم تسجيل الدخول ✓", null)
         } else {
             showLoginSection()
