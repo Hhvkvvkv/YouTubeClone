@@ -68,7 +68,7 @@ class AccountFragment : Fragment() {
         recyclerMenu = view.findViewById(R.id.recyclerMenu)
 
         btnWebLogin.setOnClickListener {
-            startActivity(Intent(requireContext(), LoginActivity::class.java))
+            loginLauncher.launch(Intent(requireContext(), LoginActivity::class.java))
         }
 
         view.findViewById<ImageButton>(R.id.btnSwitchAccount)?.setOnClickListener {
