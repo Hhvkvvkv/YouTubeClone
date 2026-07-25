@@ -19,8 +19,8 @@ import com.ytclone.R
 import com.ytclone.adapters.MenuAdapter
 import com.ytclone.api.YouTubeApi
 import com.ytclone.models.MenuItem
-import com.ytclone.ui.login.LoginActivity
 import com.ytclone.ui.history.HistoryActivity
+import com.ytclone.ui.login.LoginActivity
 
 class AccountFragment : Fragment() {
 
@@ -39,15 +39,16 @@ class AccountFragment : Fragment() {
         if (result.resultCode == android.app.Activity.RESULT_OK) {
             val cookies = result.data?.getStringExtra("cookies") ?: ""
             if (cookies.isNotEmpty()) {
+                // حفظ الكوكيز
                 prefs.edit().putString("youtube_cookies", cookies).apply()
                 YouTubeApi.authCookies = cookies
-                showProfileSection("مستخدم YouTube", "تم تسجيل الدخول", null)
-                Toast.makeText(requireContext(), "✅ تم تسجيل الدخول بنجاح", Toast.LENGTH_LONG).show()
+                showProfileSection("مستخدم YouTube", "تم تسجيل الدخول ✓", null)
+                Toast.makeText(requireContext(), "✅ تسجيل دخول ناجح - ستظهر الفيديوهات المخصصة", Toast.LENGTH_LONG).show()
             } else {
-                Toast.makeText(requireContext(), "⚠️ لم يتم الحصول على الكوكيز", Toast.LENGTH_LONG).show()
+                Toast.makeText(requireContext(), "⚠️ لم يتم تسجيل الدخول", Toast.LENGTH_LONG).show()
             }
         } else {
-            Toast.makeText(requireContext(), "❌ تم إلغاء تسجيل الدخول", Toast.LENGTH_SHORT).show()
+            Toast.makeText(requireContext(), "تم إلغاء تسجيل الدخول", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -73,7 +74,7 @@ class AccountFragment : Fragment() {
         }
 
         view.findViewById<ImageButton>(R.id.btnSwitchAccount)?.setOnClickListener {
-            prefs.edit().remove("youtube_cookies").apply()
+            prefs.edit().remove("youtube_cookies").putBoolean("is_logged_in", false).apply()
             YouTubeApi.authCookies = ""
             showLoginSection()
             Toast.makeText(requireContext(), "تم تسجيل الخروج", Toast.LENGTH_SHORT).show()
@@ -85,9 +86,11 @@ class AccountFragment : Fragment() {
 
     private fun checkLoginStatus() {
         val cookies = prefs.getString("youtube_cookies", "") ?: ""
-        if (cookies.isNotEmpty()) {
+        val isLoggedIn = prefs.getBoolean("is_logged_in", false)
+
+        if (cookies.isNotEmpty() && isLoggedIn) {
             YouTubeApi.authCookies = cookies
-            showProfileSection("مستخدم YouTube", "تم تسجيل الدخول", null)
+            showProfileSection("مستخدم YouTube", "تم تسجيل الدخول ✓", null)
         } else {
             showLoginSection()
         }
@@ -120,13 +123,17 @@ class AccountFragment : Fragment() {
 
     private fun navigateToMenu(action: String) {
         when (action) {
-            "history" -> startActivity(Intent(requireContext(), HistoryActivity::class.java))
-            else -> Toast.makeText(requireContext(), when(action) {
-                "watch_later" -> "المشاهدة لاحقاً"
-                "playlists" -> "قوائم التشغيل"
-                "liked" -> "الفيديوهات المفضلة"
-                else -> action
-            }, Toast.LENGTH_SHORT).show()
+            "history" -> {
+                if (YouTubeApi.authCookies.isEmpty()) {
+                    Toast.makeText(requireContext(), "يرجى تسجيل الدخول أولاً", Toast.LENGTH_SHORT).show()
+                } else {
+                    startActivity(Intent(requireContext(), HistoryActivity::class.java))
+                }
+            }
+            "watch_later" -> Toast.makeText(requireContext(), "المشاهدة لاحقاً - قريباً", Toast.LENGTH_SHORT).show()
+            "playlists" -> Toast.makeText(requireContext(), "قوائم التشغيل - قريباً", Toast.LENGTH_SHORT).show()
+            "liked" -> Toast.makeText(requireContext(), "المفضلة - قريباً", Toast.LENGTH_SHORT).show()
+            else -> Toast.makeText(requireContext(), action, Toast.LENGTH_SHORT).show()
         }
     }
 
