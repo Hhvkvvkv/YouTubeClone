@@ -28,36 +28,41 @@ jobs:
     - name: Install Build Tools
       run: sdkmanager "build-tools;34.0.0" "platforms;android-34"
 
-    - name: Generate Keystore for Signing
+    - name: Generate Release Keystore
       run: |
         keytool -genkey -v -keystore app/release.keystore \
           -alias videoplus -keyalg RSA -keysize 2048 -validity 10000 \
           -storepass 123456 -keypass 123456 \
           -dname "CN=VideoPlus, OU=Dev, O=VideoPlus, L=Cairo, ST=Egypt, C=EG"
-        echo "✅ Keystore created"
+
+    - name: Build Debug APK
+      run: |
+        chmod +x gradlew
+        ./gradlew assembleDebug --no-daemon --stacktrace
 
     - name: Build Release APK
       run: |
-        chmod +x gradlew
-        ./gradlew assembleRelease --no-daemon --stacktrace 2>&1 || true
-        echo "---"
-        ls -la app/build/outputs/apk/release/ 2>/dev/null || echo "Release APK not found"
-        ls -la app/build/outputs/apk/ 2>/dev/null || echo "No APK outputs"
+        ./gradlew assembleRelease --no-daemon --stacktrace
 
-    - name: Upload Release APK
-      uses: actions/upload-artifact@v4
-      if: always()
-      with:
-        name: VideoPlus-Release
-        path: app/build/outputs/apk/release/*.apk
-        retention-days: 30
-        if-no-files-found: warn
+    - name: Verify APKs exist
+      run: |
+        echo "=== Debug APK ==="
+        ls -la app/build/outputs/apk/debug/*.apk 2>/dev/null || echo "NOT FOUND"
+        echo "=== Release APK ==="
+        ls -la app/build/outputs/apk/release/*.apk 2>/dev/null || echo "NOT FOUND"
 
-    - name: Upload Debug APK (fallback)
+    - name: Upload Debug APK
       uses: actions/upload-artifact@v4
-      if: always()
       with:
         name: VideoPlus-Debug
         path: app/build/outputs/apk/debug/*.apk
+        retention-days: 30
+        if-no-files-found: error
+
+    - name: Upload Release APK
+      uses: actions/upload-artifact@v4
+      with:
+        name: VideoPlus-Release
+        path: app/build/outputs/apk/release/*.apk
         retention-days: 30
         if-no-files-found: warn

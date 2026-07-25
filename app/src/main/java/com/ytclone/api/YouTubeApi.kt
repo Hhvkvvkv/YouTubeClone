@@ -1,7 +1,5 @@
 package com.ytclone.api
 
-import com.google.gson.Gson
-import com.google.gson.JsonObject
 import com.google.gson.JsonParser
 import com.ytclone.models.VideoItem
 import kotlinx.coroutines.Dispatchers
@@ -20,88 +18,91 @@ object YouTubeApi {
         .readTimeout(15, TimeUnit.SECONDS)
         .build()
 
-    private fun getRequest(url: String): Request {
-        return Request.Builder()
-            .url(url)
-            .header("User-Agent", "Android-YouTubeClone/1.0")
-            .build()
+    private fun buildUrl(endpoint: String, vararg params: Pair<String, String>): String {
+        val allParams = mutableListOf("key" to API_KEY)
+        allParams.addAll(params)
+        val query = allParams.joinToString("&") { "${it.first}=${java.net.URLEncoder.encode(it.second, "UTF-8")}" }
+        return "$BASE_URL/$endpoint?$query"
+    }
+
+    private fun executeRequest(url: String): String? {
+        return try {
+            val request = Request.Builder()
+                .url(url)
+                .header("User-Agent", "VideoPlus/1.0")
+                .build()
+            client.newCall(request).execute().body?.string()
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        }
+    }
+
+    private fun parseVideos(jsonStr: String?): List<VideoItem> {
+        if (jsonStr == null) return emptyList()
+        return try {
+            val json = JsonParser.parseString(jsonStr).asJsonObject
+            val items = json.getAsJsonArray("items") ?: return emptyList()
+            val results = mutableListOf<VideoItem>()
+
+            for (item in items) {
+                val id = item.getAsJsonObject("id") ?: continue
+                val videoId = id.get("videoId")?.asString ?: continue
+                val snippet = item.getAsJsonObject("snippet") ?: continue
+
+                val title = snippet.get("title")?.asString ?: ""
+                val channelName = snippet.get("channelTitle")?.asString ?: ""
+                val channelId = snippet.get("channelId")?.asString ?: ""
+                val thumbnails = snippet.getAsJsonObject("thumbnails")
+                val highThumb = thumbnails?.getAsJsonObject("high")?.get("url")?.asString
+                    ?: thumbnails?.getAsJsonObject("medium")?.get("url")?.asString
+                    ?: thumbnails?.getAsJsonObject("default")?.get("url")?.asString ?: ""
+                val defaultThumb = thumbnails?.getAsJsonObject("default")?.get("url")?.asString ?: ""
+                val publishedAt = snippet.get("publishedAt")?.asString ?: ""
+                val description = snippet.get("description")?.asString ?: ""
+
+                results.add(VideoItem(
+                    videoId = videoId,
+                    title = title,
+                    channelName = channelName,
+                    channelId = channelId,
+                    channelAvatarUrl = defaultThumb,
+                    thumbnailUrl = highThumb,
+                    duration = null,
+                    viewCount = "",
+                    publishedTime = publishedAt
+                ))
+            }
+            results
+        } catch (e: Exception) {
+            e.printStackTrace()
+            emptyList()
+        }
     }
 
     suspend fun search(query: String): List<VideoItem> = withContext(Dispatchers.IO) {
-        try {
-            val url = "$BASE_URL/search?part=snippet&q=${query}&maxResults=20&key=$API_KEY&type=video"
-            val response = client.newCall(getRequest(url)).execute()
-            val json = JsonParser.parseString(response.body?.string()).asJsonObject
-
-            val results = mutableListOf<VideoItem>()
-            val items = json.getAsJsonArray("items") ?: return@withContext results
-
-            for (item in items) {
-                val videoId = item.getAsJsonObject("id")?.get("videoId")?.asString ?: continue
-                val snippet = item.getAsJsonObject("snippet") ?: continue
-                val title = snippet.get("title")?.asString ?: ""
-                val channelName = snippet.getAsJsonObject("snippet")?.get("channelTitle")?.asString ?: ""
-                val thumbnail = snippet.getAsJsonObject("thumbnails")?.getAsJsonObject("high")?.get("url")?.asString ?: ""
-                val channelAvatar = snippet.getAsJsonObject("thumbnails")?.getAsJsonObject("default")?.get("url")?.asString ?: ""
-
-                results.add(VideoItem(
-                    videoId = videoId,
-                    title = title,
-                    channelName = channelName,
-                    channelId = "",
-                    channelAvatarUrl = channelAvatar,
-                    thumbnailUrl = thumbnail,
-                    duration = null,
-                    viewCount = "",
-                    publishedTime = ""
-                ))
-            }
-            results
-        } catch (e: Exception) {
-            e.printStackTrace()
-            emptyList()
-        }
+        val url = buildUrl("search",
+            "part" to "snippet",
+            "q" to query,
+            "maxResults" to "20",
+            "type" to "video"
+        )
+        parseVideos(executeRequest(url))
     }
 
     suspend fun getHomeFeed(query: String? = null): List<VideoItem> = withContext(Dispatchers.IO) {
-        try {
-            // استخدام search endpoint مع معلمة trending
-            val searchQuery = if (query.isNullOrEmpty()) "trending" else query
-            val url = "$BASE_URL/search?part=snippet&q=$searchQuery&maxResults=20&key=$API_KEY&type=video&order=viewCount"
-            val response = client.newCall(getRequest(url)).execute()
-            val json = JsonParser.parseString(response.body?.string()).asJsonObject
-
-            val results = mutableListOf<VideoItem>()
-            val items = json.getAsJsonArray("items") ?: return@withContext results
-
-            for (item in items) {
-                val videoId = item.getAsJsonObject("id")?.get("videoId")?.asString ?: continue
-                val snippet = item.getAsJsonObject("snippet") ?: continue
-                val title = snippet.get("title")?.asString ?: ""
-                val channelName = snippet.get("channelTitle")?.asString ?: ""
-                val thumbnail = snippet.getAsJsonObject("thumbnails")?.getAsJsonObject("high")?.get("url")?.asString ?: ""
-                val channelAvatar = snippet.getAsJsonObject("thumbnails")?.getAsJsonObject("default")?.get("url")?.asString ?: ""
-
-                results.add(VideoItem(
-                    videoId = videoId,
-                    title = title,
-                    channelName = channelName,
-                    channelId = "",
-                    channelAvatarUrl = channelAvatar,
-                    thumbnailUrl = thumbnail,
-                    duration = null,
-                    viewCount = "",
-                    publishedTime = ""
-                ))
-            }
-            results
-        } catch (e: Exception) {
-            e.printStackTrace()
-            emptyList()
-        }
+        val searchQuery = query ?: "trending music videos"
+        val url = buildUrl("search",
+            "part" to "snippet",
+            "q" to searchQuery,
+            "maxResults" to "20",
+            "type" to "video",
+            "order" to "viewCount"
+        )
+        parseVideos(executeRequest(url))
     }
 
     suspend fun getSubscriptions(oauthToken: String? = null): List<VideoItem> = withContext(Dispatchers.IO) {
-        emptyList() // يحتاج تسجيل الدخول
+        emptyList()
     }
 }
