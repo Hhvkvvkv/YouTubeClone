@@ -20,6 +20,7 @@ import com.ytclone.adapters.MenuAdapter
 import com.ytclone.api.YouTubeApi
 import com.ytclone.models.MenuItem
 import com.ytclone.ui.login.LoginActivity
+import com.ytclone.ui.history.HistoryActivity
 
 class AccountFragment : Fragment() {
 
@@ -113,7 +114,19 @@ class AccountFragment : Fragment() {
         )
         recyclerMenu.layoutManager = LinearLayoutManager(requireContext())
         recyclerMenu.adapter = MenuAdapter(menuItems) { item ->
-            Toast.makeText(requireContext(), item.title, Toast.LENGTH_SHORT).show()
+            navigateToMenu(item.action)
+        }
+    }
+
+    private fun navigateToMenu(action: String) {
+        when (action) {
+            "history" -> startActivity(Intent(requireContext(), HistoryActivity::class.java))
+            else -> Toast.makeText(requireContext(), when(action) {
+                "watch_later" -> "المشاهدة لاحقاً"
+                "playlists" -> "قوائم التشغيل"
+                "liked" -> "الفيديوهات المفضلة"
+                else -> action
+            }, Toast.LENGTH_SHORT).show()
         }
     }
 

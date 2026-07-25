@@ -15,15 +15,42 @@
         android:padding="16dp"
         android:gravity="center" />
 
+    <!-- القنوات المشترك بها (أفقي) -->
+    <HorizontalScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:scrollbars="none">
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recyclerChannels"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingHorizontal="8dp"
+            android:visibility="gone" />
+
+    </HorizontalScrollView>
+
     <TextView
         android:id="@+id/txtNoSubs"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/no_subscriptions"
         android:textColor="@color/youtube_text_secondary"
-        android:textSize="16sp"
+        android:textSize="14sp"
         android:gravity="center"
-        android:layout_marginTop="64dp"
+        android:padding="16dp"
+        android:visibility="gone" />
+
+    <!-- فيديوهات الاشتراكات -->
+    <TextView
+        android:id="@+id/txtNoVideos"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="لا توجد فيديوهات حديثة"
+        android:textColor="@color/youtube_text_secondary"
+        android:textSize="14sp"
+        android:gravity="center"
+        android:padding="32dp"
         android:visibility="gone" />
 
     <androidx.recyclerview.widget.RecyclerView
