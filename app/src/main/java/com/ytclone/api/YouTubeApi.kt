@@ -46,9 +46,10 @@ object YouTubeApi {
             val results = mutableListOf<VideoItem>()
 
             for (item in items) {
-                val id = item.getAsJsonObject("id") ?: continue
+                val itemObj = item.asJsonObject
+                val id = itemObj.getAsJsonObject("id") ?: continue
                 val videoId = id.get("videoId")?.asString ?: continue
-                val snippet = item.getAsJsonObject("snippet") ?: continue
+                val snippet = itemObj.getAsJsonObject("snippet") ?: continue
 
                 val title = snippet.get("title")?.asString ?: ""
                 val channelName = snippet.get("channelTitle")?.asString ?: ""
@@ -59,7 +60,6 @@ object YouTubeApi {
                     ?: thumbnails?.getAsJsonObject("default")?.get("url")?.asString ?: ""
                 val defaultThumb = thumbnails?.getAsJsonObject("default")?.get("url")?.asString ?: ""
                 val publishedAt = snippet.get("publishedAt")?.asString ?: ""
-                val description = snippet.get("description")?.asString ?: ""
 
                 results.add(VideoItem(
                     videoId = videoId,
