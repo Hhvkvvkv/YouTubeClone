@@ -1,6 +1,7 @@
 package com.ytclone.ui.account
 
 import android.content.Intent
+import android.content.SharedPreferences
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -10,33 +11,43 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.bumptech.glide.Glide
-import com.google.android.gms.auth.api.signin.GoogleSignIn
-import com.google.android.gms.auth.api.signin.GoogleSignInClient
-import com.google.android.gms.auth.api.signin.GoogleSignInOptions
-import com.google.android.gms.common.api.ApiException
-import com.google.android.material.button.MaterialButton
 import com.ytclone.R
 import com.ytclone.adapters.MenuAdapter
+import com.ytclone.api.YouTubeApi
 import com.ytclone.models.MenuItem
+import com.ytclone.ui.login.LoginActivity
 
 class AccountFragment : Fragment() {
 
-    private lateinit var googleSignInClient: GoogleSignInClient
     private lateinit var loginSection: LinearLayout
     private lateinit var profileSection: LinearLayout
-    private lateinit var btnGoogleSignIn: MaterialButton
+    private lateinit var btnWebLogin: com.google.android.material.button.MaterialButton
     private lateinit var imgProfile: ImageView
     private lateinit var txtUserName: TextView
     private lateinit var txtUserEmail: TextView
     private lateinit var recyclerMenu: RecyclerView
+    private lateinit var prefs: SharedPreferences
 
-    companion object {
-        private const val RC_SIGN_IN = 9001
-        fun newInstance() = AccountFragment()
+    private val loginLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == android.app.Activity.RESULT_OK) {
+            val cookies = result.data?.getStringExtra("cookies") ?: ""
+            if (cookies.isNotEmpty()) {
+                prefs.edit().putString("youtube_cookies", cookies).apply()
+                YouTubeApi.authCookies = cookies
+                showProfileSection("مستخدم YouTube", "تم تسجيل الدخول", null)
+                Toast.makeText(requireContext(), "✅ تم تسجيل الدخول بنجاح", Toast.LENGTH_LONG).show()
+            } else {
+                Toast.makeText(requireContext(), "⚠️ لم يتم الحصول على الكوكيز", Toast.LENGTH_LONG).show()
+            }
+        } else {
+            Toast.makeText(requireContext(), "❌ تم إلغاء تسجيل الدخول", Toast.LENGTH_SHORT).show()
+        }
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
@@ -46,29 +57,25 @@ class AccountFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        prefs = requireContext().getSharedPreferences("videoplus", 0)
+
         loginSection = view.findViewById(R.id.loginSection)
         profileSection = view.findViewById(R.id.profileSection)
-        btnGoogleSignIn = view.findViewById(R.id.btnGoogleSignIn)
+        btnWebLogin = view.findViewById(R.id.btnWebLogin)
         imgProfile = view.findViewById(R.id.imgProfile)
         txtUserName = view.findViewById(R.id.txtUserName)
         txtUserEmail = view.findViewById(R.id.txtUserEmail)
         recyclerMenu = view.findViewById(R.id.recyclerMenu)
 
-        val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-            .requestEmail()
-            .build()
-
-        googleSignInClient = GoogleSignIn.getClient(requireActivity(), gso)
-
-        btnGoogleSignIn.setOnClickListener {
-            val signInIntent = googleSignInClient.signInIntent
-            startActivityForResult(signInIntent, RC_SIGN_IN)
+        btnWebLogin.setOnClickListener {
+            startActivity(Intent(requireContext(), LoginActivity::class.java))
         }
 
         view.findViewById<ImageButton>(R.id.btnSwitchAccount)?.setOnClickListener {
-            googleSignInClient.signOut().addOnCompleteListener {
-                showLoginSection()
-            }
+            prefs.edit().remove("youtube_cookies").apply()
+            YouTubeApi.authCookies = ""
+            showLoginSection()
+            Toast.makeText(requireContext(), "تم تسجيل الخروج", Toast.LENGTH_SHORT).show()
         }
 
         setupMenu()
@@ -76,9 +83,10 @@ class AccountFragment : Fragment() {
     }
 
     private fun checkLoginStatus() {
-        val account = GoogleSignIn.getLastSignedInAccount(requireContext())
-        if (account != null) {
-            showProfileSection(account.displayName ?: "مستخدم", account.email ?: "", account.photoUrl?.toString())
+        val cookies = prefs.getString("youtube_cookies", "") ?: ""
+        if (cookies.isNotEmpty()) {
+            YouTubeApi.authCookies = cookies
+            showProfileSection("مستخدم YouTube", "تم تسجيل الدخول", null)
         } else {
             showLoginSection()
         }
@@ -94,9 +102,6 @@ class AccountFragment : Fragment() {
         profileSection.visibility = View.VISIBLE
         txtUserName.text = name
         txtUserEmail.text = email
-        if (!photoUrl.isNullOrEmpty()) {
-            Glide.with(this).load(photoUrl).circleCrop().into(imgProfile)
-        }
     }
 
     private fun setupMenu() {
@@ -109,26 +114,6 @@ class AccountFragment : Fragment() {
         recyclerMenu.layoutManager = LinearLayoutManager(requireContext())
         recyclerMenu.adapter = MenuAdapter(menuItems) { item ->
             Toast.makeText(requireContext(), item.title, Toast.LENGTH_SHORT).show()
-        }
-    }
-
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == RC_SIGN_IN) {
-            val task = GoogleSignIn.getSignedInAccountFromIntent(data)
-            try {
-                val account = task.getResult(ApiException::class.java)
-                showProfileSection(account.displayName ?: "مستخدم", account.email ?: "", account.photoUrl?.toString())
-                Toast.makeText(requireContext(), "تم تسجيل الدخول بنجاح", Toast.LENGTH_LONG).show()
-            } catch (e: ApiException) {
-                val errorMsg = when (e.statusCode) {
-                    10 -> "خطأ في إعدادات Google Sign-In (تأكد من تسجيل SHA-1 في Google Cloud Console)"
-                    12501 -> "تم إلغاء تسجيل الدخول"
-                    12500 -> "خطأ في الاتصال بـ Google"
-                    else -> "فشل تسجيل الدخول: خطأ ${e.statusCode}"
-                }
-                Toast.makeText(requireContext(), errorMsg, Toast.LENGTH_LONG).show()
-            }
         }
     }
 }

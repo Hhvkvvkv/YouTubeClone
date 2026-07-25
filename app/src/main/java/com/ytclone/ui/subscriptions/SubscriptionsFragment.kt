@@ -55,7 +55,7 @@ class SubscriptionsFragment : Fragment() {
     private fun loadSubscriptions() {
         viewLifecycleOwner.lifecycleScope.launch {
             try {
-                val videos = YouTubeApi.getHomeFeed("subscriptions")
+                val videos = YouTubeApi.getSubscriptions()
                 if (videos.isEmpty()) {
                     txtNoSubs.visibility = View.VISIBLE
                     recyclerSubscriptions.visibility = View.GONE

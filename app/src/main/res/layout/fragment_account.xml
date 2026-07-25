@@ -10,7 +10,7 @@
         android:orientation="vertical"
         android:padding="16dp">
 
-        <!-- Login Section (shown when not logged in) -->
+        <!-- Login Section -->
         <LinearLayout
             android:id="@+id/loginSection"
             android:layout_width="match_parent"
@@ -44,25 +44,23 @@
                 android:layout_marginTop="8dp"
                 android:gravity="center" />
 
-            <!-- Google Sign-In Button -->
+            <!-- WebView Login Button -->
             <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnGoogleSignIn"
+                android:id="@+id/btnWebLogin"
                 android:layout_width="280dp"
                 android:layout_height="56dp"
                 android:layout_marginTop="24dp"
-                android:backgroundTint="@color/google_blue"
-                android:text="@string/google_sign_in"
+                android:backgroundTint="@color/youtube_red"
+                android:text="تسجيل الدخول بحساب Google"
                 android:textColor="@color/white"
                 android:textSize="16sp"
                 android:paddingHorizontal="24dp"
-                app:icon="@drawable/ic_google"
-                app:iconTint="@color/white"
                 app:cornerRadius="28dp"
                 xmlns:app="http://schemas.android.com/apk/res-auto" />
 
         </LinearLayout>
 
-        <!-- Profile Section (shown when logged in) -->
+        <!-- Profile Section -->
         <LinearLayout
             android:id="@+id/profileSection"
             android:layout_width="match_parent"
@@ -70,7 +68,6 @@
             android:orientation="vertical"
             android:visibility="gone">
 
-            <!-- User Info -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -115,11 +112,10 @@
                     android:layout_height="40dp"
                     android:background="?attr/selectableItemBackgroundBorderless"
                     android:src="@drawable/ic_account"
-                    android:contentDescription="Switch Account" />
+                    android:contentDescription="تبديل الحساب" />
 
             </LinearLayout>
 
-            <!-- Menu Items -->
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/recyclerMenu"
                 android:layout_width="match_parent"

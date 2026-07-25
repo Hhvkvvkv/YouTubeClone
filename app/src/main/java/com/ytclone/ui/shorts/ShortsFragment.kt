@@ -52,7 +52,7 @@ class ShortsFragment : Fragment() {
     private fun loadShorts() {
         viewLifecycleOwner.lifecycleScope.launch {
             try {
-                val shorts = YouTubeApi.search("shorts trending")
+                val shorts = YouTubeApi.getShorts()
                 videoAdapter.submitList(shorts)
             } catch (e: Exception) {
                 Toast.makeText(requireContext(), "خطأ في تحميل Shorts", Toast.LENGTH_SHORT).show()
