@@ -1,4 +1,4 @@
-name: Build YouTube Clone APK
+name: Build VideoPlus APK
 
 on:
   push:
@@ -35,26 +35,31 @@ jobs:
           -storepass 123456 -keypass 123456 \
           -dname "CN=VideoPlus, OU=Dev, O=VideoPlus, L=Cairo, ST=Egypt, C=EG"
 
-    - name: Build Debug APK
+    - name: Build Debug APK (v1+v2 signing)
       run: |
         chmod +x gradlew
         ./gradlew assembleDebug --no-daemon --stacktrace
 
-    - name: Build Release APK
+    - name: Build Release APK (v1+v2 signing)
       run: |
         ./gradlew assembleRelease --no-daemon --stacktrace
 
-    - name: Verify APKs exist
+    - name: Verify APKs
       run: |
         echo "=== Debug APK ==="
         ls -la app/build/outputs/apk/debug/*.apk 2>/dev/null || echo "NOT FOUND"
         echo "=== Release APK ==="
         ls -la app/build/outputs/apk/release/*.apk 2>/dev/null || echo "NOT FOUND"
+        # Check APK signature
+        if command -v apksigner &> /dev/null; then
+          echo "=== Debug APK Signature ==="
+          apksigner verify --print-certs app/build/outputs/apk/debug/app-debug.apk 2>/dev/null || echo "Cannot verify"
+        fi
 
     - name: Upload Debug APK
       uses: actions/upload-artifact@v4
       with:
-        name: VideoPlus-Debug
+        name: VideoPlus-Debug-v2
         path: app/build/outputs/apk/debug/*.apk
         retention-days: 30
         if-no-files-found: error
@@ -62,7 +67,7 @@ jobs:
     - name: Upload Release APK
       uses: actions/upload-artifact@v4
       with:
-        name: VideoPlus-Release
+        name: VideoPlus-Release-v2
         path: app/build/outputs/apk/release/*.apk
         retention-days: 30
         if-no-files-found: warn

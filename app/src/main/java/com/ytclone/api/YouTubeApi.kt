@@ -21,7 +21,9 @@ object YouTubeApi {
     private fun buildUrl(endpoint: String, vararg params: Pair<String, String>): String {
         val allParams = mutableListOf("key" to API_KEY)
         allParams.addAll(params)
-        val query = allParams.joinToString("&") { "${it.first}=${java.net.URLEncoder.encode(it.second, "UTF-8")}" }
+        val query = allParams.joinToString("&") {
+            "${it.first}=${java.net.URLEncoder.encode(it.second, "UTF-8")}"
+        }
         return "$BASE_URL/$endpoint?$query"
     }
 
@@ -29,9 +31,14 @@ object YouTubeApi {
         return try {
             val request = Request.Builder()
                 .url(url)
-                .header("User-Agent", "VideoPlus/1.0")
+                .header("User-Agent", "VideoPlus/1.1")
                 .build()
-            client.newCall(request).execute().body?.string()
+            val response = client.newCall(request).execute()
+            if (response.isSuccessful) {
+                response.body?.string()
+            } else {
+                null
+            }
         } catch (e: Exception) {
             e.printStackTrace()
             null
@@ -90,8 +97,19 @@ object YouTubeApi {
         parseVideos(executeRequest(url))
     }
 
-    suspend fun getHomeFeed(query: String? = null): List<VideoItem> = withContext(Dispatchers.IO) {
-        val searchQuery = query ?: "trending music videos"
+    suspend fun getHomeFeed(category: String? = null): List<VideoItem> = withContext(Dispatchers.IO) {
+        val searchQuery = when (category) {
+            "music" -> "music trending 2024"
+            "podcast" -> "podcast arabic"
+            "mixes" -> "music mix arabic"
+            "live" -> "live stream music"
+            "gaming" -> "gaming highlights"
+            "news" -> "news today"
+            "sports" => "sports highlights"
+            "learning" -> "education tutorial"
+            "fashion" -> "fashion beauty"
+            else -> "trending videos"
+        }
         val url = buildUrl("search",
             "part" to "snippet",
             "q" to searchQuery,

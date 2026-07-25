@@ -16,7 +16,6 @@ import com.ytclone.R
 import com.ytclone.adapters.VideoAdapter
 import com.ytclone.api.YouTubeApi
 import com.ytclone.models.Category
-import com.ytclone.models.VideoItem
 import com.ytclone.ui.player.PlayerActivity
 import com.ytclone.ui.search.SearchActivity
 import kotlinx.coroutines.launch
@@ -123,7 +122,8 @@ class HomeFragment : Fragment() {
     private fun loadVideos() {
         viewLifecycleOwner.lifecycleScope.launch {
             try {
-                val videos = YouTubeApi.getHomeFeed()
+                val categoryId = categories[selectedCategoryIndex].id
+                val videos = YouTubeApi.getHomeFeed(categoryId)
                 videoAdapter.submitList(videos)
             } catch (e: Exception) {
                 Toast.makeText(requireContext(), "خطأ في تحميل الفيديوهات", Toast.LENGTH_SHORT).show()

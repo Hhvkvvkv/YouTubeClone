@@ -119,9 +119,15 @@ class AccountFragment : Fragment() {
             try {
                 val account = task.getResult(ApiException::class.java)
                 showProfileSection(account.displayName ?: "مستخدم", account.email ?: "", account.photoUrl?.toString())
-                Toast.makeText(requireContext(), "تم تسجيل الدخول: ${account.email}", Toast.LENGTH_LONG).show()
+                Toast.makeText(requireContext(), "تم تسجيل الدخول بنجاح", Toast.LENGTH_LONG).show()
             } catch (e: ApiException) {
-                Toast.makeText(requireContext(), "فشل تسجيل الدخول: ${e.statusCode}", Toast.LENGTH_SHORT).show()
+                val errorMsg = when (e.statusCode) {
+                    10 -> "خطأ في إعدادات Google Sign-In (تأكد من تسجيل SHA-1 في Google Cloud Console)"
+                    12501 -> "تم إلغاء تسجيل الدخول"
+                    12500 -> "خطأ في الاتصال بـ Google"
+                    else -> "فشل تسجيل الدخول: خطأ ${e.statusCode}"
+                }
+                Toast.makeText(requireContext(), errorMsg, Toast.LENGTH_LONG).show()
             }
         }
     }

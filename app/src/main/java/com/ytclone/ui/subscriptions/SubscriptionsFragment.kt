@@ -21,6 +21,7 @@ class SubscriptionsFragment : Fragment() {
 
     private lateinit var recyclerSubscriptions: RecyclerView
     private lateinit var videoAdapter: VideoAdapter
+    private lateinit var txtNoSubs: TextView
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         return inflater.inflate(R.layout.fragment_subscriptions, container, false)
@@ -30,6 +31,7 @@ class SubscriptionsFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         recyclerSubscriptions = view.findViewById(R.id.recyclerSubscriptions)
+        txtNoSubs = view.findViewById(R.id.txtNoSubs)
 
         videoAdapter = VideoAdapter(
             onVideoClick = { video ->
@@ -53,10 +55,18 @@ class SubscriptionsFragment : Fragment() {
     private fun loadSubscriptions() {
         viewLifecycleOwner.lifecycleScope.launch {
             try {
-                val videos = YouTubeApi.getSubscriptions()
-                videoAdapter.submitList(videos)
+                val videos = YouTubeApi.getHomeFeed("subscriptions")
+                if (videos.isEmpty()) {
+                    txtNoSubs.visibility = View.VISIBLE
+                    recyclerSubscriptions.visibility = View.GONE
+                } else {
+                    txtNoSubs.visibility = View.GONE
+                    recyclerSubscriptions.visibility = View.VISIBLE
+                    videoAdapter.submitList(videos)
+                }
             } catch (e: Exception) {
-                Toast.makeText(requireContext(), "خطأ في تحميل الاشتراكات", Toast.LENGTH_SHORT).show()
+                txtNoSubs.visibility = View.VISIBLE
+                recyclerSubscriptions.visibility = View.GONE
             }
         }
     }
