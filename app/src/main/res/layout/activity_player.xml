@@ -34,11 +34,13 @@
 
     </LinearLayout>
 
-    <!-- YouTube Player -->
-    <com.pierfrancescosoffritti.androidyoutubeplayer.core.player.views.YouTubePlayerView
-        android:id="@+id/youtubePlayerView"
+    <!-- ExoPlayer View -->
+    <com.google.android.exoplayer2.ui.PlayerView
+        android:id="@+id/playerView"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:background="@color/black" />
 
     <!-- Video Info -->
     <LinearLayout

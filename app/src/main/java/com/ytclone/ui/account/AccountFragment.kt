@@ -21,6 +21,7 @@ import com.ytclone.api.YouTubeApi
 import com.ytclone.models.MenuItem
 import com.ytclone.ui.history.HistoryActivity
 import com.ytclone.ui.login.LoginActivity
+import com.ytclone.utils.CookieStorage
 
 class AccountFragment : Fragment() {
 
@@ -73,14 +74,27 @@ class AccountFragment : Fragment() {
         }
 
         view.findViewById<ImageButton>(R.id.btnSwitchAccount)?.setOnClickListener {
-            prefs.edit().remove("youtube_cookies").putBoolean("is_logged_in", false).apply()
-            YouTubeApi.authCookies = ""
-            showLoginSection()
-            Toast.makeText(requireContext(), "تم تسجيل الخروج", Toast.LENGTH_SHORT).show()
+            performLogout()
         }
 
         setupMenu()
         checkLoginStatus()
+    }
+
+    private fun performLogout() {
+        // حذف الكوكيز من SharedPreferences
+        prefs.edit().remove("youtube_cookies").putBoolean("is_logged_in", false).apply()
+        
+        // حذف الكوكيز من التخزين الخارجي
+        CookieStorage.clearCookies(requireContext())
+        
+        // مسح الكوكيز من YouTubeApi
+        YouTubeApi.authCookies = ""
+        
+        // عرض شاشة تسجيل الدخول
+        showLoginSection()
+        
+        Toast.makeText(requireContext(), "✅ تم تسجيل الخروج بنجاح", Toast.LENGTH_SHORT).show()
     }
 
     private fun checkLoginStatus() {
@@ -113,6 +127,7 @@ class AccountFragment : Fragment() {
             MenuItem(R.drawable.ic_play, "المشاهدة لاحقاً", "watch_later"),
             MenuItem(R.drawable.ic_subscriptions, "قوائم التشغيل", "playlists"),
             MenuItem(R.drawable.ic_play, "الفيديوهات المفضلة", "liked"),
+            MenuItem(R.drawable.ic_more, "تسجيل الخروج", "logout"),
         )
         recyclerMenu.layoutManager = LinearLayoutManager(requireContext())
         recyclerMenu.adapter = MenuAdapter(menuItems) { item ->
@@ -132,6 +147,7 @@ class AccountFragment : Fragment() {
             "watch_later" -> Toast.makeText(requireContext(), "المشاهدة لاحقاً - قريباً", Toast.LENGTH_SHORT).show()
             "playlists" -> Toast.makeText(requireContext(), "قوائم التشغيل - قريباً", Toast.LENGTH_SHORT).show()
             "liked" -> Toast.makeText(requireContext(), "المفضلة - قريباً", Toast.LENGTH_SHORT).show()
+            "logout" -> performLogout()
             else -> Toast.makeText(requireContext(), action, Toast.LENGTH_SHORT).show()
         }
     }

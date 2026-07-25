@@ -66,6 +66,7 @@ object CookieStorage {
             val file = File(dir, COOKIE_FILE)
             if (file.exists()) {
                 file.delete()
+                android.util.Log.d("CookieStorage", "✅ تم حذف الكوكيز من التخزين الخارجي")
             }
         } catch (e: Exception) {
             android.util.Log.e("CookieStorage", "❌ خطأ في حذف الكوكيز: ${e.message}")
