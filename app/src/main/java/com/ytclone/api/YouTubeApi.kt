@@ -39,7 +39,7 @@ object YouTubeApi {
         val hashInput = "$timestamp $sapisid"
         val hash = MessageDigest.getInstance("SHA-1").digest(hashInput.toByteArray())
             .joinToString("") { "%02x".format(it) }
-        return "$timestamp_$hash"
+        return "${timestamp}_$hash"
     }
 
     private fun buildContext(): String {
@@ -137,7 +137,7 @@ object YouTubeApi {
             // richGridRenderer (الرئيسية)
             val richGrid = content.getAsJsonObject("richGridRenderer")
             if (richGrid != null) {
-                val items = richGrid.getAsJsonArray("contents") ?: return@let
+                val items = richGrid.getAsJsonArray("contents") ?: return results
                 for (item in items) {
                     // richSectionRenderer
                     val rsr = item.asJsonObject.getAsJsonObject("richSectionRenderer")
@@ -156,7 +156,7 @@ object YouTubeApi {
                         }
                     }
                 }
-                return@let
+                return results
             }
 
             // sectionListRenderer (السجل، الاشتراكات)
