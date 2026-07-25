@@ -1,7 +1,6 @@
 package com.ytclone.ui.login
 
 import android.content.Intent
-import android.content.SharedPreferences
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -20,8 +19,8 @@ class LoginActivity : AppCompatActivity() {
     private lateinit var webView: WebView
     private lateinit var progressBar: ProgressBar
     private lateinit var txtStatus: TextView
-    private var isLoginFinished = false
     private val handler = Handler(Looper.getMainLooper())
+    private var isLoginComplete = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -57,30 +56,21 @@ class LoginActivity : AppCompatActivity() {
             override fun onPageFinished(view: WebView?, url: String?) {
                 super.onPageFinished(view, url)
                 if (url != null) {
-                    updateStatus("تم التحميل: ${url.take(60)}")
-
-                    // تحقق إذا تم تسجيل الدخول (تم التوجيه لصفحة YouTube)
+                    // تحقق إذا وصلنا لـ YouTube بعد تسجيل الدخول
+                    val isYouTube = url.contains("youtube.com") && !url.contains("accounts.google.com")
                     val isLoginPage = url.contains("accounts.google.com/ServiceLogin") ||
-                            url.contains("accounts.google.com/SignIn") ||
                             url.contains("accounts.google.com/signin")
 
-                    val isYouTube = url.contains("youtube.com") && !url.contains("/signin") && !url.contains("accounts.google.com")
-
-                    if (isYouTube && !isLoginPage && !isLoginFinished) {
+                    if (isYouTube && !isLoginPage && !isLoginComplete) {
                         // نجاح تسجيل الدخول!
-                        isLoginFinished = true
+                        isLoginComplete = true
                         handler.postDelayed({
-                            captureAndSaveCookies()
+                            saveCookiesAndFinish()
                         }, 3000) // انتظر 3 ثواني لضمان تعيين الكوكيز
                     } else if (isLoginPage) {
-                        // على صفحة تسجيل الدخول
-                        updateStatus("يرجى إدخال البريد وكلمة المرور...")
+                        updateStatus("أدخل البريد وكلمة المرور")
                     }
                 }
-            }
-
-            override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
-                return false
             }
         }
 
@@ -105,24 +95,12 @@ class LoginActivity : AppCompatActivity() {
         webView.loadUrl("https://accounts.google.com/ServiceLogin?hl=ar&passive=true&continue=https://www.youtube.com/&ec=GAZAAQ")
     }
 
-    private fun captureAndSaveCookies() {
-        if (isLoginFinished) return
-
-        updateStatus("جاري حفظ بيانات تسجيل الدخول...")
-
-        // جمع الكوكيز من جميع النطاقات
+    private fun saveCookiesAndFinish() {
         val cookieManager = CookieManager.getInstance()
         val allCookies = mutableListOf<String>()
 
-        // جمع الكوكيز من النطاقات المرتبطة بـ Google/YouTube
-        val domains = listOf(
-            ".google.com",
-            ".youtube.com",
-            "accounts.google.com",
-            "google.com",
-            "youtube.com"
-        )
-        for (domain in domains) {
+        // جمع الكوكيز من جميع النطاقات
+        for (domain in listOf(".google.com", ".youtube.com", "accounts.google.com", "google.com", "youtube.com")) {
             try {
                 val c = cookieManager.getCookie(domain)
                 if (!c.isNullOrEmpty()) {
@@ -134,7 +112,7 @@ class LoginActivity : AppCompatActivity() {
         if (allCookies.isNotEmpty()) {
             YouTubeApi.authCookies = allCookies.joinToString("; ")
 
-            // حفظ في SharedPreferences للاستخدام الدائم
+            // حفظ في SharedPreferences
             val prefs = getSharedPreferences("videoplus", 0)
             prefs.edit()
                 .putString("youtube_cookies", YouTubeApi.authCookies)
@@ -142,7 +120,7 @@ class LoginActivity : AppCompatActivity() {
                 .apply()
 
             runOnUiThread {
-                Toast.makeText(this, "✅ تم تسجيل الدخول بنجاح", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "✅ تم تسجيل الدخول", Toast.LENGTH_SHORT).show()
             }
 
             val resultIntent = Intent()
@@ -152,13 +130,13 @@ class LoginActivity : AppCompatActivity() {
             finish()
         } else {
             runOnUiThread {
-                Toast.makeText(this, "⚠️ لم يتم العثور على كوكيز، حاول مرة أخرى", Toast.LENGTH_LONG).show()
+                Toast.makeText(this, "⚠️ حاول مرة أخرى", Toast.LENGTH_LONG).show()
             }
-            // إعادة تحميل صفحة تسجيل الدخول
+            // إعادة تحميل الصفحة
             handler.postDelayed({
-                isLoginFinished = false
+                isLoginComplete = false
                 webView.loadUrl("https://accounts.google.com/ServiceLogin?hl=ar&passive=true&continue=https://www.youtube.com/&ec=GAZAAQ")
-            }, 3000)
+            }, 2000)
         }
     }
 
@@ -167,9 +145,8 @@ class LoginActivity : AppCompatActivity() {
     }
 
     override fun onBackPressed() {
-        if (webView.canGoBack()) {
-            webView.goBack()
-        } else {
+        if (webView.canGoBack()) webView.goBack()
+        else {
             setResult(RESULT_CANCELED)
             finish()
         }

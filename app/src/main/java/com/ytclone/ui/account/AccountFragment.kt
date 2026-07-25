@@ -39,11 +39,10 @@ class AccountFragment : Fragment() {
         if (result.resultCode == android.app.Activity.RESULT_OK) {
             val cookies = result.data?.getStringExtra("cookies") ?: ""
             if (cookies.isNotEmpty()) {
-                // حفظ الكوكيز
                 prefs.edit().putString("youtube_cookies", cookies).apply()
                 YouTubeApi.authCookies = cookies
                 showProfileSection("مستخدم YouTube", "تم تسجيل الدخول ✓", null)
-                Toast.makeText(requireContext(), "✅ تسجيل دخول ناجح - ستظهر الفيديوهات المخصصة", Toast.LENGTH_LONG).show()
+                Toast.makeText(requireContext(), "✅ تسجيل دخول ناجح - المحتوى المخصص متاح", Toast.LENGTH_LONG).show()
             } else {
                 Toast.makeText(requireContext(), "⚠️ لم يتم تسجيل الدخول", Toast.LENGTH_LONG).show()
             }
